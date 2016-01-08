@@ -74,6 +74,14 @@ module OmniContacts
         @env["omnicontacts.user"] = user
       end
 
+      def set_current_token token
+        @env["omnicontacts.token"] = token
+      end
+
+      def set_current_email email
+        @env["omnicontacts.email"] = email
+      end
+
       #  This method rescues executes a block of code and
       #  rescue all exceptions. In case of an exception the
       #  user is redirected to the failure endpoint.

@@ -1,5 +1,6 @@
 require "omnicontacts/parse_utils"
 require "omnicontacts/middleware/oauth2"
+require 'google/api_client'
 
 module OmniContacts
   module Importer
@@ -13,7 +14,7 @@ module OmniContacts
         @auth_host = "accounts.google.com"
         @authorize_path = "/o/oauth2/auth"
         @auth_token_path = "/o/oauth2/token"
-        @scope = (args[3] && args[3][:scope]) || "https://www.googleapis.com/auth/contacts.readonly https://www.googleapis.com/auth/userinfo#email https://www.googleapis.com/auth/userinfo.profile"
+        @scope = (args[3] && args[3][:scope]) || "https://mail.google.com/  https://www.google.com/m8/feeds"
         @contacts_host = "www.google.com"
         @contacts_path = "/m8/feeds/contacts/default/full"
         @max_results =  (args[3] && args[3][:max_results]) || 100
@@ -22,7 +23,9 @@ module OmniContacts
       end
 
       def fetch_contacts_using_access_token access_token, token_type
-        fetch_current_user(access_token, token_type)
+        # fetch_current_user(access_token, token_type)
+        fetch_current_token(access_token, token_type)
+        fetch_email_account(access_token, token_type)
         contacts_response = https_get(@contacts_host, @contacts_path, contacts_req_params, contacts_req_headers(access_token, token_type))
         contacts_from_response(contacts_response, access_token)
       end
@@ -33,7 +36,34 @@ module OmniContacts
         set_current_user user
       end
 
+      def fetch_current_token access_token, token_type
+        token = current_token(access_token, token_type)
+        set_current_token token
+      end
+
+      def fetch_email_account access_token, token_type
+        client = Google::APIClient.new
+        client.authorization.access_token = access_token
+        gmail = client.discovered_api('gmail', 'v1')
+        result = client.execute(
+          :api_method => gmail.users.get_profile,
+          :parameters => {userId: 'me'},
+          :headers    => {'Content-Type' => 'application/json'}
+        )
+        email = current_email(result.body)
+        set_current_email email
+      end
+
       private
+
+      def current_email result
+        return nil if result.blank?
+        eval(result) rescue nil
+      end
+
+      def current_token access_token, token_type
+        {access_token: access_token, token_type: token_type}
+      end
 
       def contacts_req_params
         {'max-results' => @max_results.to_s, 'alt' => 'json'}
