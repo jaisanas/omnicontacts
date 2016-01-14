@@ -24,7 +24,7 @@ module OmniContacts
 
       def fetch_contacts_using_access_token access_token, token_type
         # fetch_current_user(access_token, token_type)
-        fetch_current_token(access_token, token_type)
+        fetch_current_token(access_token, token_type, refresh_token)
         fetch_email_account(access_token, token_type)
         contacts_response = https_get(@contacts_host, @contacts_path, contacts_req_params, contacts_req_headers(access_token, token_type))
         contacts_from_response(contacts_response, access_token)
@@ -36,8 +36,8 @@ module OmniContacts
         set_current_user user
       end
 
-      def fetch_current_token access_token, token_type
-        token = current_token(access_token, token_type)
+      def fetch_current_token access_token, token_type, refresh_token
+        token = current_token(access_token, token_type, refresh_token)
         set_current_token token
       end
 
@@ -61,8 +61,8 @@ module OmniContacts
         eval(result) rescue nil
       end
 
-      def current_token access_token, token_type
-        {access_token: access_token, token_type: token_type}
+      def current_token access_token, token_type, refresh_token
+        {access_token: access_token, token_type: token_type, refresh_token: refresh_token}
       end
 
       def contacts_req_params
