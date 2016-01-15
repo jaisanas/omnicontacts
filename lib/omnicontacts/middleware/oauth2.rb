@@ -50,7 +50,7 @@ module OmniContacts
                                                       else
                                                         fetch_access_token(code)
                                                       end
-          contacts = fetch_contacts_using_access_token(access_token, token_type)
+          contacts = fetch_contacts_using_access_token(access_token, token_type, refresh_token)
           session[refresh_token_prop_name(code)] = refresh_token if refresh_token
           contacts
         else

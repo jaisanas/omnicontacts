@@ -22,7 +22,7 @@ module OmniContacts
         @profile_path = "/oauth2/v3/userinfo"
       end
 
-      def fetch_contacts_using_access_token access_token, token_type
+      def fetch_contacts_using_access_token access_token, token_type, refresh_token=nil
         # fetch_current_user(access_token, token_type)
         fetch_current_token(access_token, token_type, refresh_token)
         fetch_email_account(access_token, token_type)
