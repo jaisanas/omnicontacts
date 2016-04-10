@@ -6,7 +6,6 @@ Gem::Specification.new do |gem|
   gem.description = %q{A generalized Rack middleware for importing contacts from major email providers.}
   gem.authors = ['Diego Castorina', 'Jordan Lance', 'Asma Tameem', 'Randy Villanueva']
   gem.email = ['diegocastorina@gmail.com', 'voorruby@gmail.com']
-  gem.version = '0.3.14'
 
   gem.add_runtime_dependency 'rack'
   gem.add_runtime_dependency 'json'
