@@ -42,7 +42,7 @@ module OmniContacts
       end
 
       def fetch_email_account access_token, token_type
-        client = Google::APIClient.new
+        client = Google::APIClient.new(application_name: 'Qontak Development', application_version: '1.0')
         client.authorization.access_token = access_token
         gmail = client.discovered_api('gmail', 'v1')
         result = client.execute(
@@ -52,6 +52,7 @@ module OmniContacts
         )
         email = current_email(result.body)
         set_current_email email
+        set_current_user email
       end
 
       private
