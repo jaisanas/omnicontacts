@@ -35,8 +35,32 @@ module OmniContacts
       def fetch_contacts_using_access_token access_token, token_type, refresh_token = nil
         fetch_current_token(access_token, token_type, refresh_token)
         fetch_current_user(access_token)
-        contacts_response = nil
+        contacts_response = fetch_contacts_data access_token
         contacts_from_response contacts_response
+      end
+
+      def fetch_contacts_data access_token
+        view_size = 300
+        page = 1
+        fields = nil
+        sort = nil
+        user = nil
+        request_url = "/api/v2.0/" << (user.nil? ? "Me/" : ("users/" << user)) << "Contacts"
+        request_params = {
+          '$top' => view_size,
+          '$skip' => (page - 1) * view_size
+        }
+
+        if not fields.nil?
+          request_params['$select'] = fields.join(',')
+        end
+
+        if not sort.nil?
+          request_params['$orderby'] = sort[:sort_field] + " " + sort[:sort_order]
+        end
+
+        outlook_client  = RubyOutlook::Client.new
+        response_as_json   = outlook_client.make_api_call "GET", request_url, access_token, request_params
       end
 
       def fetch_current_token access_token, token_type, refresh_token
@@ -81,18 +105,18 @@ module OmniContacts
         return nil if response_as_json.blank?
         response = JSON.parse(response_as_json)
         contacts = []
-        response['data'].each do |entry|
+        response['value'].each do |entry|
           # creating nil fields to keep the fields consistent across other networks
           contact = {:id => nil, :first_name => nil, :last_name => nil, :name => nil, :email => nil, :gender => nil, :birthday => nil, :profile_picture=> nil, :relation => nil, :email_hashes => []}
-          contact[:id] = entry['user_id'] ? entry['user_id'] : entry['id']
-          contact[:email] = parse_email(emails) if valid_email? parse_email(emails)
-          contact[:first_name] = normalize_name(entry['first_name'])
-          contact[:last_name] = normalize_name(entry['last_name'])
-          contact[:name] = normalize_name(entry['name'])
-          contact[:birthday] = birthday_format(entry['birth_month'], entry['birth_day'], entry['birth_year'])
-          contact[:gender] = entry['gender']
-          contact[:profile_picture] = image_url(entry['user_id'])
-          contact[:email_hashes] = entry['email_hashes']
+          contact[:id] = entry['Id'] ? entry['Id'] : entry['id']
+          contact[:email] = (entry['EmailAddresses'][0]['Address'] rescue nil) #parse_email(emails) if valid_email? parse_email(emails)
+          contact[:first_name] = normalize_name(entry['GivenName'])
+          contact[:last_name] = normalize_name(entry['Surname'])
+          contact[:name] = normalize_name(entry['DisplayName'])
+          contact[:birthday] = nil #birthday_format(entry['birth_month'], entry['birth_day'], entry['birth_year'])
+          contact[:gender] = nil #entry['gender']
+          contact[:profile_picture] = nil #image_url(entry['user_id'])
+          contact[:email_hashes] = nil #entry['email_hashes']
           contacts << contact if contact[:name] || contact[:first_name]
         end
         contacts
@@ -107,13 +131,12 @@ module OmniContacts
         return nil if me.nil?
         me = JSON.parse(me)
         email = me["EmailAddress"]
-        user = {:id => me['Id'], :email => email, :name => me['DisplayName'], :first_name => me['first_name'],
+        user = {:id => me['Id'], :emailAddress => email, :email => email, :name => me['DisplayName'], :first_name => me['first_name'],
                 :last_name => me['last_name'], :gender => me['gender'], :profile_picture => image_url(me['id']),
                 :birthday => birthday_format(me['birth_month'], me['birth_day'], me['birth_year'])
         }
         user
       end
-
 
       def image_url hotmail_id
         return 'https://apis.live.net/v5.0/' + hotmail_id + '/picture' if hotmail_id
