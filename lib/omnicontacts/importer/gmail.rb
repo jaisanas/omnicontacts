@@ -1,6 +1,6 @@
 require "omnicontacts/parse_utils"
 require "omnicontacts/middleware/oauth2"
-require 'google/api_client'
+# require 'google/api_client'
 
 module OmniContacts
   module Importer
@@ -42,7 +42,12 @@ module OmniContacts
       end
 
       def fetch_email_account access_token, token_type
-        client = Google::APIClient.new(application_name: 'Qontak Development', application_version: '1.0')
+        Google::Apis::ClientOptions.default.application_name = 'Ruby client samples'
+        Google::Apis::ClientOptions.default.application_version = '0.9'
+        Google::Apis::RequestOptions.default.retries = 3
+
+
+        # client = Google::APIClient.new(application_name: 'Qontak Development', application_version: '1.0')
         client.authorization.access_token = access_token
         gmail = client.discovered_api('gmail', 'v1')
         result = client.execute(
