@@ -1,6 +1,7 @@
 require "omnicontacts/parse_utils"
 require "omnicontacts/middleware/oauth2"
-require 'google/api_client'
+require 'google/apis/gmail_v1'
+
 
 module OmniContacts
   module Importer
@@ -25,7 +26,7 @@ module OmniContacts
       def fetch_contacts_using_access_token access_token, token_type, refresh_token=nil
         # fetch_current_user(access_token, token_type)
         fetch_current_token(access_token, token_type, refresh_token)
-        fetch_email_account(access_token, token_type)
+        fetch_email_account(access_token, token_type, refresh_token)
         contacts_response = https_get(@contacts_host, @contacts_path, contacts_req_params, contacts_req_headers(access_token, token_type))
         contacts_from_response(contacts_response, access_token)
       end
@@ -41,16 +42,12 @@ module OmniContacts
         set_current_token token
       end
 
-      def fetch_email_account access_token, token_type
-        client = Google::APIClient.new
-        client.authorization.access_token = access_token
-        gmail = client.discovered_api('gmail', 'v1')
-        result = client.execute(
-          :api_method => gmail.users.get_profile,
-          :parameters => {userId: 'me'},
-          :headers    => {'Content-Type' => 'application/json'}
-        )
-        email = current_email(result.body)
+      def fetch_email_account access_token, token_type, refresh_token
+        access_token = AccessToken.new access_token
+        client = Google::Apis::GmailV1::GmailService.new
+        client.authorization = access_token
+        result = client.get_user_profile('me')
+        email = current_email("{ \"emailAddress\": \"#{result.email_address}\", \"messagesTotal\": \"#{result.messages_total}\", \"threadsTotal\": \"#{result.threads_total}\" }")
         set_current_email email
       end
 
@@ -235,5 +232,16 @@ module OmniContacts
       end
 
     end
+  end
+end
+# https://gist.github.com/udn/f071ef8d2ada3d62654ffa2e65f929ba
+class AccessToken
+  attr_reader :access_token
+  def initialize(access_token)
+    @access_token = access_token
+  end
+
+  def apply!(headers)
+    headers['Authorization'] = "Bearer #{@access_token}"
   end
 end

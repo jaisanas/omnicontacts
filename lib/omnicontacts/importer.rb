@@ -6,6 +6,7 @@ module OmniContacts
     autoload :Hotmail, "omnicontacts/importer/hotmail"
     autoload :Facebook, "omnicontacts/importer/facebook"
     autoload :Linkedin, "omnicontacts/importer/linkedin"
+    autoload :Exchange, "omnicontacts/importer/exchange"
 
   end
 end

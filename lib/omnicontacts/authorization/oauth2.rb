@@ -26,14 +26,18 @@ module OmniContacts
       private
 
       def authorize_url_params
-        to_query_string({
+        params = {
             :client_id => client_id,
             :scope => encode(scope),
             :response_type => "code",
             :access_type => "offline",
             :approval_prompt => "auto",
             :redirect_uri => encode(redirect_uri)
-          })
+          }
+        if auth_host == "login.microsoftonline.com"
+          params[:client_secret] = client_secret
+        end
+        to_query_string(params)
       end
 
       public
@@ -46,18 +50,24 @@ module OmniContacts
       private
 
       def token_req_params code
-        {
+        params = {
           :client_id => client_id,
           :client_secret => client_secret,
           :code => code,
           :redirect_uri => encode(redirect_uri),
-          :grant_type => "authorization_code"
+          :grant_type => "authorization_code",
         }
+        if auth_host == "login.microsoftonline.com"
+          params[:resource] = 'https://outlook.office365.com'
+        end
+        params
       end
 
       def access_token_from_response response
         if auth_host == "graph.facebook.com"
           response = query_string_to_map(response).to_json
+        elsif auth_host == "login.microsoftonline.com"
+          response = "{\"access_token\": \"#{response.token}\", \"token_type\": \"#{response.params['token_type']}\", \"refresh_token\": \"#{response.refresh_token}\" }"
         end
         json = JSON.parse(response)
         raise json["error"] if json["error"]
@@ -66,7 +76,7 @@ module OmniContacts
 
       public
 
-      # Refreshes the access token using the provided refresh_token.
+      # Refreshes the access token using the provided refresh_response.
       def refresh_access_token refresh_token
         access_token_from_response https_post(auth_host, auth_token_path, refresh_token_req_params(refresh_token))
       end
