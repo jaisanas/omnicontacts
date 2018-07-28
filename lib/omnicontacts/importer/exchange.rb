@@ -105,19 +105,21 @@ module OmniContacts
         return nil if response_as_json.blank?
         response = JSON.parse(response_as_json)
         contacts = []
-        response['value'].each do |entry|
-          # creating nil fields to keep the fields consistent across other networks
-          contact = {:id => nil, :first_name => nil, :last_name => nil, :name => nil, :email => nil, :gender => nil, :birthday => nil, :profile_picture=> nil, :relation => nil, :email_hashes => []}
-          contact[:id] = entry['Id'] ? entry['Id'] : entry['id']
-          contact[:email] = (entry['EmailAddresses'][0]['Address'] rescue nil) #parse_email(emails) if valid_email? parse_email(emails)
-          contact[:first_name] = normalize_name(entry['GivenName'])
-          contact[:last_name] = normalize_name(entry['Surname'])
-          contact[:name] = normalize_name(entry['DisplayName'])
-          contact[:birthday] = nil #birthday_format(entry['birth_month'], entry['birth_day'], entry['birth_year'])
-          contact[:gender] = nil #entry['gender']
-          contact[:profile_picture] = nil #image_url(entry['user_id'])
-          contact[:email_hashes] = nil #entry['email_hashes']
-          contacts << contact if contact[:name] || contact[:first_name]
+        unless contacts.blank?
+          response['value'].each do |entry|
+            # creating nil fields to keep the fields consistent across other networks
+            contact = {:id => nil, :first_name => nil, :last_name => nil, :name => nil, :email => nil, :gender => nil, :birthday => nil, :profile_picture=> nil, :relation => nil, :email_hashes => []}
+            contact[:id] = entry['Id'] ? entry['Id'] : entry['id']
+            contact[:email] = (entry['EmailAddresses'][0]['Address'] rescue nil) #parse_email(emails) if valid_email? parse_email(emails)
+            contact[:first_name] = normalize_name(entry['GivenName'])
+            contact[:last_name] = normalize_name(entry['Surname'])
+            contact[:name] = normalize_name(entry['DisplayName'])
+            contact[:birthday] = nil #birthday_format(entry['birth_month'], entry['birth_day'], entry['birth_year'])
+            contact[:gender] = nil #entry['gender']
+            contact[:profile_picture] = nil #image_url(entry['user_id'])
+            contact[:email_hashes] = nil #entry['email_hashes']
+            contacts << contact if contact[:name] || contact[:first_name]
+          end
         end
         contacts
       end
