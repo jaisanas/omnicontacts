@@ -13,7 +13,7 @@ module OmniContacts
         super app, client_id, client_secret, options
         @auth_host = "login.microsoftonline.com"
         @authorize_path = "/common/oauth2/authorize"
-        @scope = options[:permissions] || "https://outlook.office.com/contacts.read https://outlook.office.com/mail.read https://outlook.office.com/mail.send"
+        @scope = options[:permissions] || "https://outlook.office.com/contacts.read https://outlook.office.com/mail.read https://outlook.office.com/mail.send https://outlook.office.com/calendars.read"
         @auth_token_path = "/common/oauth2/token"
         @contacts_host = "outlook.office365.com"
         @contacts_path = "/v2.0/me/contacts"
