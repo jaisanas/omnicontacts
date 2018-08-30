@@ -105,7 +105,7 @@ module OmniContacts
         return nil if response_as_json.blank?
         response = JSON.parse(response_as_json)
         contacts = []
-        unless contacts.blank?
+        unless response['value'].blank?
           response['value'].each do |entry|
             # creating nil fields to keep the fields consistent across other networks
             contact = {:id => nil, :first_name => nil, :last_name => nil, :name => nil, :email => nil, :gender => nil, :birthday => nil, :profile_picture=> nil, :relation => nil, :email_hashes => []}
